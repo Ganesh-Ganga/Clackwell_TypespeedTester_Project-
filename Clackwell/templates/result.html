@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}Run result — Clackwell{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">{% endblock %}
+
+{% block content %}
+<section class="page">
+  <div class="shell">
+
+    <div class="result-hero" data-reveal>
+      <p class="caption">Level {{ r.level }} · {{ level.title }} · {{ r.mode|capitalize }} mode</p>
+      <h1>
+        {% if r.passed %}You cleared it{% elif r.accuracy >= 95 %}Clean run{% else %}Run complete{% endif %}
+      </h1>
+      <p class="lede" style="margin-inline:auto;">
+        {% if r.passed %}
+          You hit {{ level.target_wpm }} wpm at {{ level.target_accuracy }}% — the level target.
+        {% else %}
+          The target for this level is {{ level.target_wpm }} wpm at {{ level.target_accuracy }}% accuracy.
+          You're {{ (level.target_wpm - r.wpm)|round(0)|int }} wpm away.
+        {% endif %}
+      </p>
+    </div>
+
+    <div class="result-grid" data-reveal>
+      <div class="hero"><span>Words per minute</span><strong data-count="{{ r.wpm }}" data-decimals="0">0</strong></div>
+      <div><span>Accuracy</span><strong data-count="{{ r.accuracy }}" data-decimals="0">0</strong></div>
+      <div><span>Correct words</span><strong data-count="{{ r.correct_words }}">0</strong></div>
+      <div><span>Missed words</span><strong data-count="{{ r.incorrect_words }}">0</strong></div>
+      <div><span>Time</span><strong>{{ r.time_taken|round(0)|int }}s</strong></div>
+      <div><span>Score</span><strong data-count="{{ r.score }}">0</strong></div>
+    </div>
+
+    <div class="compare" data-reveal>
+      <span>Previous best <b>{{ previous_best|round(0)|int }}</b> wpm</span>
+      <span class="arrow"><i class="bi bi-arrow-right"></i></span>
+      <span>This run <b>{{ r.wpm|round(0)|int }}</b> wpm</span>
+      {% if r.wpm > previous_best %}<span class="pb-tag" id="pbTag">New personal best</span>{% endif %}
+    </div>
+
+    <div class="split">
+      <div class="card" data-reveal>
+        <h3>Where the XP came from</h3>
+        <p class="card-note">Total added to your account: {{ r.xp_earned }} XP.</p>
+        <ul class="xp-lines">
+          {% for label, amount in xp_lines %}
+            <li><span>{{ label }}</span><b>+{{ amount }}</b></li>
+          {% else %}
+            <li><span>Test completed</span><b>+{{ r.xp_earned }}</b></li>
+          {% endfor %}
+        </ul>
+
+        {% if unlocked %}
+        <div class="unlock-note" id="unlockNote">
+          <strong>Level {{ unlocked.number }} is open — {{ unlocked.title }}</strong>
+          <p style="margin:.2rem 0 0; font-size:.9rem;">The material steps up. Take a look before you start.</p>
+        </div>
+        {% endif %}
+
+        {% if new_badges %}
+        <div style="margin-top:1.2rem;">
+          <p class="caption">Badges unlocked</p>
+          <div class="badge-grid">
+            {% for b in new_badges %}
+            <div class="badge-tile earned" data-tip="{{ b.description }}">
+              <i class="bi bi-{{ b.icon }}"></i>
+              <strong>{{ b.name }}</strong>
+              <span>just now</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="card" data-reveal>
+        <h3>Keystroke breakdown</h3>
+        <p class="card-note">Counted as you typed, before any corrections.</p>
+        <table class="runs">
+          <tr><td>Correct characters</td><td style="text-align:right;">{{ r.correct_characters }}</td></tr>
+          <tr><td>Wrong characters</td><td style="text-align:right;">{{ r.incorrect_characters }}</td></tr>
+          <tr><td>Characters per minute</td><td style="text-align:right;">{{ r.cpm|round(0)|int }}</td></tr>
+          {% if r.max_combo %}<tr><td>Longest combo</td><td style="text-align:right;">{{ r.max_combo }}</td></tr>{% endif %}
+          {% if r.mode == 'survival' %}<tr><td>Stage reached</td><td style="text-align:right;">{{ r.stage_reached }} of 5</td></tr>{% endif %}
+          <tr><td>Level target</td><td style="text-align:right;">{{ level.target_wpm }} wpm / {{ level.target_accuracy }}%</td></tr>
+        </table>
+      </div>
+    </div>
+
+    {% if all_done %}
+    <div class="finale" data-reveal id="finale">
+      <p class="caption">Every level cleared</p>
+      <h2>You finished Clackwell</h2>
+      <p class="lede" style="margin-inline:auto;">
+        Seven levels, from plain lowercase words to raw source code. The keyboard works for you now.
+      </p>
+      <div class="result-actions">
+        <a class="btn btn-primary" href="{{ url_for('main.analytics_page') }}">See the full record</a>
+        <a class="btn" href="{{ url_for('main.test', level=7) }}">Run it again</a>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="result-actions">
+      <a class="btn btn-primary" href="{{ url_for('main.test', level=r.level, mode=r.mode) }}">
+        <i class="bi bi-arrow-counterclockwise"></i> Try again
+      </a>
+      {% if next_level and next_level.number <= user.current_level %}
+        <a class="btn" href="{{ url_for('main.test', level=next_level.number) }}">
+          Next level — {{ next_level.title }}
+        </a>
+      {% endif %}
+      <a class="btn" href="{{ url_for('main.analytics_page') }}">View analytics</a>
+      <a class="btn btn-ghost" href="{{ url_for('main.dashboard') }}">Back to dashboard</a>
+    </div>
+
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const celebrate = {{ 'true' if (all_done or unlocked or new_badges or r.wpm > previous_best) else 'false' }};
+    if (celebrate) window.CWAnim.confetti({{ 3200 if all_done else 1800 }});
+    {% if unlocked %}
+      setTimeout(() => window.CWAnim.toast('Level {{ unlocked.number }} unlocked', 'mark', 2200), 500);
+    {% endif %}
+  });
+</script>
+{% endblock %}

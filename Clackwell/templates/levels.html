@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Levels — Clackwell{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">{% endblock %}
+
+{% block content %}
+<section class="page">
+  <div class="shell">
+    <div class="page-head" data-reveal>
+      <h1>The ladder</h1>
+      <p>A level opens when you hit its speed target, its accuracy target and its score in the same run.
+         Cleared levels stay open — replay any of them to beat your own score.</p>
+    </div>
+
+    <div class="level-grid">
+      {% for c in cards %}
+      <article class="level-card {{ 'open' if c.unlocked }} {{ 'cleared' if c.cleared }} {{ 'shut' if not c.unlocked }}" data-reveal>
+        <span class="state">
+          {% if c.cleared %}<i class="bi bi-check-circle-fill" data-tip="Cleared"></i>
+          {% elif not c.unlocked %}<i class="bi bi-lock-fill" data-tip="Clear the level before this one to open it"></i>
+          {% endif %}
+        </span>
+
+        <span class="num">Level {{ c.number }} · {{ c.difficulty }}</span>
+        <h3>{{ c.title }}</h3>
+        <p>{{ c.blurb }}</p>
+
+        <div class="level-targets">
+          <span><i class="bi bi-speedometer2"></i> {{ c.target_wpm }} wpm</span>
+          <span><i class="bi bi-bullseye"></i> {{ c.target_accuracy }}%</span>
+          <span><i class="bi bi-star"></i> {{ c.required_score }} pts</span>
+          <span><i class="bi bi-plus-circle"></i> {{ c.xp_reward }} XP</span>
+        </div>
+
+        {% if c.best %}
+          <div class="level-best">Your best: {{ c.best.wpm }} wpm · {{ c.best.accuracy }}% · {{ '{:,}'.format(c.best.score) }} pts</div>
+        {% endif %}
+
+        <div class="level-actions">
+          {% if c.unlocked %}
+            <a class="btn btn-sm btn-primary" href="{{ url_for('main.test', level=c.number, mode='time', duration=60) }}">
+              {{ 'Replay' if c.cleared else 'Start' }}
+            </a>
+            <a class="btn btn-sm btn-ghost" href="{{ url_for('main.test', level=c.number, mode='sentence') }}">Sentence</a>
+            <a class="btn btn-sm btn-ghost" href="{{ url_for('main.test', level=c.number, mode='rush') }}">Rush</a>
+            <a class="btn btn-sm btn-ghost" href="{{ url_for('main.test', level=c.number, mode='survival') }}">Survival</a>
+          {% else %}
+            <span class="tiny muted">Clear level {{ c.number - 1 }} to open this.</span>
+          {% endif %}
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+
+    <hr class="rule">
+
+    <div class="page-head">
+      <h2>Modes, and when to use them</h2>
+    </div>
+    <div class="mode-note">
+      {% for m in modes %}
+      <div>
+        <strong><i class="bi bi-{{ m.icon }}"></i> {{ m.name }}</strong>
+        <p>{{ m.blurb }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

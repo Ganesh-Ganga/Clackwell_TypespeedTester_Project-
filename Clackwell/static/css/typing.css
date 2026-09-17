@@ -1,0 +1,140 @@
+/* The typing screen. Everything here is built so the eye can stay on one
+   line of text: quiet chrome, one highlight colour, no motion near the cursor. */
+
+.game { padding: 1.8rem 0 3rem; }
+
+.game-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 1.2rem; flex-wrap: wrap; margin-bottom: 1.1rem; }
+.game-head h1 { font-size: 1.55rem; margin: 0; }
+.game-head .caption { margin: 0; }
+.level-pill {
+  display: inline-flex; align-items: center; gap: .4rem;
+  border: 2px solid var(--ink); border-radius: 999px; padding: .15rem .7rem;
+  font-family: var(--mono); font-size: .8rem; font-weight: 700; background: var(--mark);
+}
+
+.mode-switch { display: flex; gap: .35rem; flex-wrap: wrap; }
+.mode-switch a {
+  border: 1px solid var(--rule); border-radius: 999px; padding: .28rem .8rem;
+  font-size: .86rem; text-decoration: none; color: var(--ink-soft); background: var(--paper);
+}
+.mode-switch a:hover { border-color: var(--ink); color: var(--ink); }
+.mode-switch a.on { border-color: var(--ink); background: var(--ink); color: var(--paper); font-weight: 600; }
+
+.hud {
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  border: 2px solid var(--ink); border-radius: var(--radius); overflow: hidden;
+  background: var(--ink);  /* becomes the 2px separators */
+  gap: 2px;
+}
+.hud div { background: var(--paper); padding: .85rem 1rem; }
+.hud span { display: block; font-size: .76rem; color: var(--ink-faint); }
+.hud strong { font-family: var(--mono); font-size: 1.7rem; font-weight: 700; letter-spacing: -.04em; line-height: 1.25; }
+.hud .warn strong { color: var(--stop); }
+
+.duration-row { display: flex; align-items: center; gap: .5rem; margin: 1rem 0 0; flex-wrap: wrap; }
+.duration-row .caption { margin: 0 .3rem 0 0; }
+
+/* --- typing surface ------------------------------------------------------ */
+
+.surface {
+  position: relative; margin-top: 1rem;
+  border: 2px solid var(--ink); border-radius: 14px; background: var(--paper);
+  padding: 1.8rem 1.6rem; min-height: 210px;
+}
+.surface.done { border-style: dashed; }
+
+.stream {
+  font-family: var(--mono); font-size: 1.22rem; line-height: 2.1;
+  max-height: 6.4em; overflow: hidden; position: relative;
+  word-break: break-word;
+}
+.stream span { border-radius: 2px; }
+.stream .ok  { color: var(--go); }
+.stream .bad { color: var(--stop); background: var(--stop-soft); text-decoration: underline wavy var(--stop) 1px; }
+.stream .pending { color: var(--ink-faint); }
+.stream .at { background: var(--mark); color: var(--ink); box-shadow: 0 0 0 1px var(--ink) inset; }
+.stream .at.space { background: var(--mark); }
+
+.capture { position: absolute; opacity: 0; width: 1px; height: 1px; border: 0; padding: 0; }
+
+.start-veil {
+  position: absolute; inset: 0; display: grid; place-content: center; text-align: center;
+  background: rgba(255,255,255,.93); border-radius: 12px; cursor: text; gap: .3rem;
+}
+.start-veil strong { font-size: 1.1rem; }
+.start-veil span { font-size: .9rem; color: var(--ink-soft); }
+.start-veil kbd {
+  font-family: var(--mono); border: 2px solid var(--ink); border-radius: 6px;
+  padding: .1rem .45rem; box-shadow: var(--keycap-sm); background: var(--paper); font-size: .85rem;
+}
+.surface.live .start-veil { display: none; }
+
+.progress-line { height: 5px; background: var(--paper-sunk); border-radius: 99px; margin-top: 1.3rem; overflow: hidden; border: 1px solid var(--rule); }
+.progress-line i { display: block; height: 100%; width: 0; background: var(--ink); transition: width .15s linear; }
+
+/* --- word rush ----------------------------------------------------------- */
+
+.rush { text-align: center; }
+.rush-word { font-family: var(--mono); font-size: clamp(2.2rem, 7vw, 3.4rem); font-weight: 700; letter-spacing: -.03em; }
+.rush-word .ok { color: var(--go); }
+.rush-word .bad { color: var(--stop); }
+.rush-word .rest { color: var(--ink-faint); }
+.rush-queue { margin-top: .8rem; font-family: var(--mono); color: var(--ink-faint); font-size: .95rem; display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+.rush-queue span:first-child { color: var(--ink-soft); }
+.rush-input {
+  margin-top: 1.4rem; width: min(420px, 100%); font-family: var(--mono); font-size: 1.15rem;
+  text-align: center; border: 2px solid var(--ink); border-radius: 10px; padding: .55rem .8rem;
+  box-shadow: var(--keycap-sm);
+}
+.rush-input:focus { outline: none; background: var(--mark-soft); }
+.rush-input.wrong { border-color: var(--stop); background: var(--stop-soft); }
+
+.combo {
+  display: inline-flex; align-items: center; gap: .4rem; margin-top: 1rem;
+  font-family: var(--mono); font-weight: 700; font-size: .95rem;
+  border: 2px solid var(--ink); border-radius: 999px; padding: .2rem .8rem; background: var(--paper);
+}
+.combo.hot { background: var(--mark); }
+.combo.pop { animation: pop .25s ease; }
+@keyframes pop { 50% { transform: scale(1.14); } }
+
+/* --- survival ------------------------------------------------------------ */
+
+.lives { display: flex; gap: .3rem; align-items: center; font-size: 1.05rem; }
+.lives i.spent { color: var(--rule); }
+.stage-strip { display: flex; gap: .4rem; margin-bottom: 1rem; flex-wrap: wrap; }
+.stage-strip span {
+  font-size: .78rem; border: 1px solid var(--rule); border-radius: 99px; padding: .1rem .6rem;
+  color: var(--ink-faint);
+}
+.stage-strip span.on { border-color: var(--ink); background: var(--ink); color: var(--paper); }
+.stage-strip span.cleared { border-color: var(--go); color: var(--go); }
+
+/* --- virtual keyboard ---------------------------------------------------- */
+
+.kbd-wrap { margin-top: 1.6rem; }
+.kbd { display: grid; gap: 5px; justify-items: center; }
+.kbd-row { display: flex; gap: 5px; }
+.kbd-key {
+  min-width: 34px; height: 36px; padding-inline: .45rem;
+  display: grid; place-items: center;
+  border: 1px solid var(--rule); border-radius: 6px; background: var(--paper);
+  font-family: var(--mono); font-size: .8rem; color: var(--ink-soft);
+  transition: transform .06s ease, background .12s ease, color .12s ease;
+}
+.kbd-key.space { min-width: 190px; }
+.kbd-key.down { background: var(--mark); color: var(--ink); border-color: var(--ink); transform: translateY(2px); }
+.kbd-key.next { border-color: var(--ink); color: var(--ink); box-shadow: inset 0 -3px 0 var(--mark); }
+.kbd-toggle { background: none; border: 0; color: var(--ink-soft); font-size: .86rem; cursor: pointer; padding: 0; }
+.kbd-toggle:hover { color: var(--ink); text-decoration: underline; }
+
+@media (max-width: 860px) {
+  .hud { grid-template-columns: repeat(3, 1fr); }
+  .hud div:nth-child(4), .hud div:nth-child(5) { grid-column: span 1; }
+  .stream { font-size: 1.08rem; }
+  .kbd-wrap { display: none; }
+}
+@media (max-width: 520px) {
+  .hud { grid-template-columns: repeat(2, 1fr); }
+  .surface { padding: 1.3rem 1rem; }
+}

@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}{{ user.username }} — Clackwell{% endblock %}
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="page">
+  <div class="shell">
+
+    <div class="card" data-reveal>
+      <div class="profile-top">
+        <div class="profile-avatar">{{ user.avatar or user.username[0]|upper }}</div>
+        <div>
+          <h1>{{ user.name }}</h1>
+          <p class="handle">@{{ user.username }} · {{ user.rank }} · joined {{ member_since }}</p>
+          {% if user.tagline %}<p class="muted" style="margin:.3rem 0 0;">{{ user.tagline }}</p>{% endif %}
+        </div>
+        <div style="margin-left:auto; min-width:220px;">
+          <div class="rank-row">
+            <strong>Level {{ user.current_level }} · {{ level.title }}</strong>
+            <span>{{ xp_into }}/{{ xp_span }}</span>
+          </div>
+          <div class="xp-track"><div class="xp-fill" data-fill="{{ xp_percent }}"></div></div>
+          <p class="tiny muted" style="margin:.4rem 0 0;">{{ user.xp }} XP total · {{ user.streak or 0 }} day streak</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="summary" data-reveal style="margin-top:1.4rem;">
+      <div><span>Runs completed</span><strong data-count="{{ stats.tests }}">0</strong></div>
+      <div class="mark"><span>Best speed</span><strong data-count="{{ stats.best_wpm }}">0</strong></div>
+      <div><span>Average speed</span><strong>{{ stats.avg_wpm }}</strong></div>
+      <div><span>Best accuracy</span><strong>{{ stats.best_accuracy }}%</strong></div>
+      <div><span>Longest streak</span><strong>{{ user.best_streak or 0 }}</strong></div>
+      <div><span>Badges</span><strong>{{ earned|length }}/{{ total_badges }}</strong></div>
+    </div>
+
+    <div class="split">
+      <div class="card" data-reveal>
+        <h3>Badges earned</h3>
+        <p class="card-note">{{ earned|length }} of {{ total_badges }} unlocked so far.</p>
+        {% if earned %}
+        <div class="badge-grid">
+          {% for ub in earned %}
+          <div class="badge-tile earned" data-tip="{{ ub.badge.description }}">
+            <i class="bi bi-{{ ub.badge.icon }}"></i>
+            <strong>{{ ub.badge.name }}</strong>
+            <span>{{ ub.earned_at.strftime('%d %b %Y') }}</span>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+          <div class="empty">
+            <i class="bi bi-award"></i>
+            <h3>No badges yet</h3>
+            <p>First Flight unlocks the moment you finish a single run.</p>
+            <a class="btn btn-primary" href="{{ url_for('main.test') }}">Start a run</a>
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="card" data-reveal>
+        <h3>Edit your details</h3>
+        <p class="card-note">Username and email are fixed. Everything else is yours to change.</p>
+        <form method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+          <div class="field">
+            <label for="name">Display name</label>
+            <input id="name" name="name" value="{{ user.name }}" required>
+          </div>
+
+          <div class="field">
+            <label for="avatar">Avatar letter</label>
+            <input id="avatar" name="avatar" maxlength="2" value="{{ user.avatar }}">
+            <span class="hint">One or two characters — a letter, initials, or an emoji.</span>
+          </div>
+
+          <div class="field">
+            <label for="tagline">Short line about you</label>
+            <input id="tagline" name="tagline" maxlength="120" value="{{ user.tagline or '' }}"
+                   placeholder="Learning to touch type without looking down">
+          </div>
+
+          <button class="btn btn-primary" type="submit">Save changes</button>
+        </form>
+
+        <hr class="rule" style="margin:1.4rem 0;">
+        <p class="tiny muted">
+          Your email is <span class="mono">{{ user.email }}</span> and is never shown to other users.
+          Passwords are stored as salted hashes — not even this page can read yours.
+        </p>
+      </div>
+    </div>
+
+  </div>
+</section>
+{% endblock %}

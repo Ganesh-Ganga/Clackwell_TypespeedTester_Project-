@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Create your Clackwell account{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">{% endblock %}
+
+{% block content %}
+<section class="auth">
+  <div class="shell auth-grid">
+    <div class="auth-sheet" data-reveal>
+      <p class="caption">New account</p>
+      <h1>Start your record</h1>
+      <p>Two minutes of setup, then every run you make is kept and compared.</p>
+
+      <form method="post" novalidate id="registerForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="field {{ 'invalid' if errors.name }}">
+          <label for="name">Full name</label>
+          <input id="name" name="name" value="{{ data.name or '' }}" autocomplete="name" required>
+          {% if errors.name %}<span class="err">{{ errors.name }}</span>{% endif %}
+        </div>
+
+        <div class="field-row">
+          <div class="field {{ 'invalid' if errors.username }}">
+            <label for="username">Username</label>
+            <input id="username" name="username" value="{{ data.username or '' }}" autocomplete="username" required>
+            <span class="hint">Shown on the leaderboard.</span>
+            {% if errors.username %}<span class="err">{{ errors.username }}</span>{% endif %}
+          </div>
+
+          <div class="field {{ 'invalid' if errors.email }}">
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" value="{{ data.email or '' }}" autocomplete="email" required>
+            <span class="hint">Never shown to anyone else.</span>
+            {% if errors.email %}<span class="err">{{ errors.email }}</span>{% endif %}
+          </div>
+        </div>
+
+        <div class="field {{ 'invalid' if errors.password }}">
+          <label for="password">Password</label>
+          <div class="pw-wrap">
+            <input id="password" name="password" type="password" autocomplete="new-password" required>
+            <button class="pw-toggle" type="button" data-toggle="password" aria-label="Show password">
+              <i class="bi bi-eye"></i>
+            </button>
+          </div>
+          <div class="strength">
+            <div class="strength-track"><div class="strength-fill" id="strengthFill"></div></div>
+            <span class="strength-label" id="strengthLabel">At least 8 characters, with a letter and a number.</span>
+          </div>
+          {% if errors.password %}<span class="err">{{ errors.password }}</span>{% endif %}
+        </div>
+
+        <div class="field {{ 'invalid' if errors.confirm_password }}">
+          <label for="confirm_password">Confirm password</label>
+          <div class="pw-wrap">
+            <input id="confirm_password" name="confirm_password" type="password" autocomplete="new-password" required>
+            <button class="pw-toggle" type="button" data-toggle="confirm_password" aria-label="Show password">
+              <i class="bi bi-eye"></i>
+            </button>
+          </div>
+          <span class="err" id="matchErr" style="display:none;">Both passwords must match.</span>
+          {% if errors.confirm_password %}<span class="err">{{ errors.confirm_password }}</span>{% endif %}
+        </div>
+
+        <div class="auth-actions">
+          <button class="btn btn-primary btn-lg" type="submit">Create account</button>
+          <span class="tiny muted">Already registered? <a href="{{ url_for('auth.login') }}">Sign in</a></span>
+        </div>
+      </form>
+    </div>
+
+    <aside class="auth-aside" data-reveal>
+      <p class="caption">What you get</p>
+      <h3>A record, not just a number</h3>
+      <ul>
+        <li><i class="bi bi-graph-up"></i> Every run stored with WPM, accuracy and score</li>
+        <li><i class="bi bi-calendar3"></i> A daily activity grid going back twelve weeks</li>
+        <li><i class="bi bi-unlock"></i> Seven levels that open as you hit their targets</li>
+        <li><i class="bi bi-shield-lock"></i> Passwords hashed — never stored as text</li>
+      </ul>
+      <p class="quote">Your analytics are private. The leaderboard shows a username, speed,
+        accuracy and level. Nothing else leaves your account.</p>
+    </aside>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+{% endblock %}

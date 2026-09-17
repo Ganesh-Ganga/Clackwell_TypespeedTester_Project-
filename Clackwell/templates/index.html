@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+{% block title %}Clackwell — a typing range{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="shell hero-grid">
+    <div>
+      <p class="caption" data-reveal>Seven levels · Four modes · One honest score</p>
+      <h1 data-reveal>Type faster. Think faster. <span class="marked">Own the keyboard.</span></h1>
+      <p class="lede" data-reveal>
+        Clackwell measures every keystroke you make, keeps the record, and tells you what
+        actually changed between this week and last.
+      </p>
+      <div class="hero-actions" data-reveal>
+        <a class="btn btn-primary btn-lg" href="{{ url_for('main.test') if user else url_for('auth.register') }}">
+          <i class="bi bi-keyboard"></i> Start typing
+        </a>
+        <a class="btn btn-lg" href="#how">See how it works</a>
+      </div>
+
+      <div class="hero-meta" data-reveal>
+        <div><span>Levels</span><strong>7</strong></div>
+        <div><span>Game modes</span><strong>4</strong></div>
+        <div><span>Badges to earn</span><strong>12</strong></div>
+      </div>
+    </div>
+
+    <div class="hero-visual" data-reveal>
+      <span class="keycap-float k1">⌘</span>
+      <span class="keycap-float k2">⏎</span>
+      <span class="keycap-float k3">C</span>
+
+      <div class="demo" id="demo" tabindex="0" role="textbox" aria-label="Try typing the sample line">
+        <div class="demo-bar">
+          <span><span class="dot"></span>warm-up line</span>
+          <span class="mono" id="demoStatus">ready</span>
+        </div>
+        <div class="demo-body">
+          <div class="demo-text" id="demoText"></div>
+          <input class="demo-input" id="demoInput" autocomplete="off" autocapitalize="off" spellcheck="false" aria-hidden="true" tabindex="-1">
+          <div class="demo-foot">
+            <div><span>Words per minute</span><strong id="demoWpm">0</strong></div>
+            <div><span>Accuracy</span><strong id="demoAcc">100%</strong></div>
+            <div><span>Time</span><strong id="demoTime">0.0s</strong></div>
+          </div>
+          <p class="demo-hint">Click here and start typing — this one is real.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="why">
+  <div class="shell">
+    <div class="section-head">
+      <h2>Why practise here</h2>
+      <p>Most typing sites hand you a number and forget you. Clackwell keeps the whole history.</p>
+    </div>
+
+    <div class="why">
+      <div class="why-cell wide">
+        <i class="bi bi-graph-up-arrow"></i>
+        <h3>Every run is stored, so progress is a fact rather than a feeling</h3>
+        <p>Your WPM curve, accuracy trend, strongest weekday and best hour of the day are all
+           read straight from the runs you've completed — nothing is estimated.</p>
+      </div>
+      <div class="why-cell">
+        <i class="bi bi-bullseye"></i>
+        <h3>Accuracy is weighted</h3>
+        <p>Machine-gunning the keys scores badly on purpose. Below 90% the whole score scales down.</p>
+      </div>
+      <div class="why-cell">
+        <i class="bi bi-lock"></i>
+        <h3>Levels are earned</h3>
+        <p>A level opens when you hit its speed <em>and</em> accuracy target — not when you show up.</p>
+      </div>
+      <div class="why-cell">
+        <i class="bi bi-fire"></i>
+        <h3>Streaks that mean something</h3>
+        <p>One run a day keeps the streak alive. Miss a day and it resets, like it should.</p>
+      </div>
+      <div class="why-cell">
+        <i class="bi bi-award"></i>
+        <h3>Twelve real badges</h3>
+        <p>Each one has a condition checked against your stored results the moment a run ends.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="how" style="padding-top:0;">
+  <div class="shell">
+    <div class="section-head">
+      <h2>How it works</h2>
+      <p>Four steps, then repeat until the numbers move.</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <h3>Pick a level</h3>
+        <p>Start at Beginner. Each level changes the material — longer words, punctuation, digits, then code.</p>
+      </div>
+      <div class="step">
+        <h3>Pick a mode</h3>
+        <p>A clock, a single sentence, a word queue with combos, or survival with three lives.</p>
+      </div>
+      <div class="step">
+        <h3>Type the line</h3>
+        <p>Characters turn green or red as you go. The clock starts on your first keystroke, not before.</p>
+      </div>
+      <div class="step">
+        <h3>Read the result</h3>
+        <p>Score, XP, badges and the next level unlock land on one screen, then feed your dashboard.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0;">
+  <div class="shell">
+    <div class="section-head">
+      <h2>The ladder</h2>
+      <p>Difficulty comes from the material, never from a shorter clock.</p>
+    </div>
+    <div class="ladder">
+      {% for lvl in LEVELS %}
+      <div class="ladder-row">
+        <span class="ladder-num">L{{ lvl.number }}</span>
+        <div>
+          <strong>{{ lvl.title }}</strong>
+          <p>{{ lvl.blurb }}</p>
+        </div>
+        <span class="ladder-goal">{{ lvl.target_wpm }} wpm · {{ lvl.target_accuracy }}%</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0;">
+  <div class="shell">
+    <div class="section-head">
+      <h2>Four ways to practise</h2>
+      <p>Same engine, different pressure.</p>
+    </div>
+    <div class="modes">
+      <div class="mode-card">
+        <i class="bi bi-stopwatch"></i>
+        <h3>Time Attack</h3>
+        <p>15, 30, 60 or 120 seconds. Type as much as you can before it hits zero.</p>
+      </div>
+      <div class="mode-card">
+        <i class="bi bi-quote"></i>
+        <h3>Sentence Challenge</h3>
+        <p>One sentence, typed exactly. No clock breathing down your neck.</p>
+      </div>
+      <div class="mode-card">
+        <i class="bi bi-lightning"></i>
+        <h3>Word Rush</h3>
+        <p>One word at a time. Five in a row doubles your combo; twenty gives you 5×.</p>
+      </div>
+      <div class="mode-card">
+        <i class="bi bi-shield-exclamation"></i>
+        <h3>Survival</h3>
+        <p>Five stages from plain words to raw source code. Three mistakes and it's over.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0;">
+  <div class="shell">
+    <div class="closing">
+      <h2>Your first run takes fifteen seconds</h2>
+      <p class="lede">That's the shortest test on the site. It's also the one most people use to find out
+        how far off their guess was.</p>
+      <a class="btn btn-primary btn-lg" href="{{ url_for('main.test') if user else url_for('auth.register') }}">
+        {{ 'Open the typing test' if user else 'Create a free account' }}
+      </a>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => window.initHeroDemo && window.initHeroDemo());
+</script>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Leaderboard — Clackwell{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">{% endblock %}
+
+{% block content %}
+<section class="page">
+  <div class="shell">
+
+    <div class="page-head row-between" data-reveal>
+      <div>
+        <h1>Leaderboard</h1>
+        <p>Best single run per person. Usernames only — no email address ever appears here.</p>
+      </div>
+      <div class="chips">
+        {% for key, label in [('daily','Today'), ('weekly','This week'), ('monthly','This month'), ('all','All time')] %}
+          <a class="chip {{ 'on' if scope == key }}" href="{{ url_for('main.leaderboard', scope=key) }}">{{ label }}</a>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="card" data-reveal>
+      {% if rows %}
+      <table class="board">
+        <thead>
+          <tr><th>Rank</th><th>Typist</th><th>Best WPM</th><th>Accuracy</th><th>Level</th><th>Rank title</th></tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+          <tr class="{{ 'me' if user and row.username == user.username }}">
+            <td class="rank-num">{{ row.rank }}</td>
+            <td class="who"><span class="avatar-dot">{{ row.avatar }}</span>{{ row.username }}</td>
+            <td>{{ row.wpm|round(0)|int }}</td>
+            <td>{{ row.accuracy|round(0)|int }}%</td>
+            <td>L{{ row.level }}</td>
+            <td>{{ row.rank_name }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+        <div class="empty">
+          <i class="bi bi-trophy"></i>
+          <h3>Nothing on the board for this window</h3>
+          <p>{{ 'Nobody has completed a run today yet — the first one takes the top spot.' if scope != 'all' else 'The board fills up as soon as the first run is recorded.' }}</p>
+          <a class="btn btn-primary" href="{{ url_for('main.test') if user else url_for('auth.register') }}">
+            {{ 'Start a run' if user else 'Create an account' }}
+          </a>
+        </div>
+      {% endif %}
+    </div>
+
+    <p class="tiny muted" style="margin-top:1rem;">
+      Ranking uses your fastest run inside the selected window, with accuracy as the tiebreaker.
+    </p>
+  </div>
+</section>
+{% endblock %}

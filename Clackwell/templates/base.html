@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Clackwell{% endblock %}</title>
+  <meta name="description" content="Clackwell is a typing range: seven levels, four modes, and an honest record of how fast you actually type.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block styles %}{% endblock %}
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23ffd23f' stroke='%2314161a' stroke-width='3'/><text x='16' y='23' font-size='17' font-family='monospace' font-weight='700' text-anchor='middle' fill='%2314161a'>C</text></svg>">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="shell topbar-inner">
+    <a class="brand" href="{{ url_for('main.index') }}">
+      <span class="brand-key">C</span> Clackwell
+    </a>
+
+    <button class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false">
+      <i class="bi bi-list"></i>
+    </button>
+
+    <div class="nav-wrap" id="navWrap">
+      <ul class="nav-links">
+        <li><a href="{{ url_for('main.index') }}" class="{{ 'active' if request.endpoint == 'main.index' }}">Home</a></li>
+        {% if user %}
+          <li><a href="{{ url_for('main.test') }}" class="{{ 'active' if request.endpoint == 'main.test' }}">Typing test</a></li>
+          <li><a href="{{ url_for('main.levels') }}" class="{{ 'active' if request.endpoint == 'main.levels' }}">Levels</a></li>
+          <li><a href="{{ url_for('main.dashboard') }}" class="{{ 'active' if request.endpoint == 'main.dashboard' }}">Dashboard</a></li>
+        {% endif %}
+        <li><a href="{{ url_for('main.leaderboard') }}" class="{{ 'active' if request.endpoint == 'main.leaderboard' }}">Leaderboard</a></li>
+      </ul>
+
+      <div class="nav-side">
+        {% if user %}
+          <a class="avatar-chip" href="{{ url_for('main.profile') }}">
+            <span class="avatar-dot">{{ user.avatar or user.username[0]|upper }}</span>
+            <span>{{ user.username }}</span>
+            {% if user.streak %}<span class="streak"><i class="bi bi-fire"></i>{{ user.streak }}</span>{% endif %}
+          </a>
+          <form method="post" action="{{ url_for('auth.logout') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-ghost btn-sm" type="submit">Sign out</button>
+          </form>
+        {% else %}
+          <a class="btn btn-ghost btn-sm" href="{{ url_for('auth.login') }}">Sign in</a>
+          <a class="btn btn-primary btn-sm" href="{{ url_for('auth.register') }}">Create account</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</header>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="flash-stack" id="flashStack">
+    {% for category, message in messages %}
+      <div class="flash {{ category }}">{{ message }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}
+
+<main>
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="site-footer">
+  <div class="shell">
+    <div class="footer-grid">
+      <div>
+        <a class="brand" href="{{ url_for('main.index') }}"><span class="brand-key">C</span> Clackwell</a>
+        <p class="muted" style="margin-top:.7rem; max-width:34ch;">
+          A typing range with seven levels, four modes and a record of every run you've made.
+        </p>
+      </div>
+      <div>
+        <h4>Practice</h4>
+        <ul>
+          <li><a href="{{ url_for('main.index') }}">Home</a></li>
+          {% if user %}
+            <li><a href="{{ url_for('main.test') }}">Typing test</a></li>
+            <li><a href="{{ url_for('main.levels') }}">Levels</a></li>
+          {% else %}
+            <li><a href="{{ url_for('auth.register') }}">Create account</a></li>
+          {% endif %}
+          <li><a href="{{ url_for('main.leaderboard') }}">Leaderboard</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Your record</h4>
+        <ul>
+          {% if user %}
+            <li><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+            <li><a href="{{ url_for('main.analytics_page') }}">Analytics</a></li>
+            <li><a href="{{ url_for('main.profile') }}">Profile</a></li>
+          {% else %}
+            <li><a href="{{ url_for('auth.login') }}">Sign in</a></li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+    <div class="footer-base">
+      <span>&copy; {{ now.year }} Clackwell</span>
+      <span class="mono">Type faster. Practice smarter. Improve every day.</span>
+    </div>
+  </div>
+</footer>
+
+<div id="confetti-layer" aria-hidden="true"></div>
+<div class="tip" id="tooltip" role="tooltip"></div>
+
+<script src="{{ url_for('static', filename='js/animations.js') }}"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

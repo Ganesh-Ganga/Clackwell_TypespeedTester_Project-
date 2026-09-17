@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}Level {{ level.number }} · {{ level.title }} — Clackwell{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/typing.css') }}">{% endblock %}
+
+{% block content %}
+<section class="game">
+  <div class="shell">
+
+    <div class="game-head">
+      <div>
+        <p class="caption">
+          <span class="level-pill">L{{ level.number }}</span>
+          {{ level.title }} · target {{ level.target_wpm }} wpm at {{ level.target_accuracy }}%
+        </p>
+        <h1 id="modeTitle">{{ level.blurb }}</h1>
+      </div>
+
+      <div class="mode-switch">
+        {% for m in modes %}
+          <a href="{{ url_for('main.test', level=level.number, mode=m.key, duration=duration) }}"
+             class="{{ 'on' if m.key == mode }}" title="{{ m.blurb }}">
+            <i class="bi bi-{{ m.icon }}"></i> {{ m.name }}
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="hud" id="hud">
+      <div id="hudTimeBox"><span id="hudTimeLabel">Time left</span><strong id="hudTime">{{ duration }}</strong></div>
+      <div><span>Words per minute</span><strong id="hudWpm">0</strong></div>
+      <div><span>Accuracy</span><strong id="hudAcc">100%</strong></div>
+      <div><span id="hudWordsLabel">Words</span><strong id="hudWords">0</strong></div>
+      <div><span>Score</span><strong id="hudScore">0</strong></div>
+    </div>
+
+    {% if mode == 'time' %}
+    <div class="duration-row">
+      <span class="caption">Clock</span>
+      {% for d in [15, 30, 60, 120] %}
+        <a class="chip {{ 'on' if d == duration }}"
+           href="{{ url_for('main.test', level=level.number, mode='time', duration=d) }}">{{ d }}s</a>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if mode == 'survival' %}
+    <div class="duration-row" style="justify-content:space-between;">
+      <div class="stage-strip" id="stageStrip"></div>
+      <div class="lives" id="lives" title="Three lives. Every five wrong keystrokes costs one."></div>
+    </div>
+    {% endif %}
+
+    <!-- typing surface -->
+    <div class="surface" id="surface">
+      <div class="start-veil" id="veil">
+        <strong>{{ 'Type the first word to begin' if mode != 'rush' else 'Click the box and start typing' }}</strong>
+        <span>The clock starts on your first keystroke. Press <kbd>Esc</kbd> to restart.</span>
+      </div>
+
+      {% if mode == 'rush' %}
+        <div class="rush">
+          <div class="rush-word" id="rushWord">loading</div>
+          <div class="rush-queue" id="rushQueue"></div>
+          <input class="rush-input" id="rushInput" autocomplete="off" autocapitalize="off"
+                 spellcheck="false" aria-label="Type the word shown above">
+          <div><span class="combo" id="combo">combo ×1</span></div>
+        </div>
+      {% else %}
+        <div class="stream" id="stream" aria-live="off"></div>
+        <input class="capture" id="capture" autocomplete="off" autocapitalize="off" spellcheck="false"
+               aria-label="Typing input">
+      {% endif %}
+
+      <div class="progress-line"><i id="progressBar"></i></div>
+    </div>
+
+    <div class="row-between" style="margin-top:1rem;">
+      <div class="chips">
+        <button class="btn btn-sm" id="restartBtn"><i class="bi bi-arrow-counterclockwise"></i> Restart</button>
+        <a class="btn btn-sm btn-ghost" href="{{ url_for('main.levels') }}">Change level</a>
+      </div>
+      <button class="kbd-toggle" id="kbdToggle">Hide keyboard</button>
+    </div>
+
+    <div class="kbd-wrap" id="kbdWrap">
+      <div class="kbd" id="kbd"></div>
+    </div>
+
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  window.CW_SESSION = {
+    mode: "{{ mode }}",
+    level: {{ level.number }},
+    duration: {{ duration }},
+    targetWpm: {{ level.target_wpm }},
+    multiplier: {{ level.multiplier }},
+    textUrl: "{{ url_for('api.text', mode=mode, level=level.number) }}",
+    saveUrl: "{{ url_for('api.save_result') }}"
+  };
+</script>
+<script src="{{ url_for('static', filename='js/typing.js') }}"></script>
+{% endblock %}

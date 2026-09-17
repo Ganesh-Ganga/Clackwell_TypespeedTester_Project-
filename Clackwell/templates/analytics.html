@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Analytics — Clackwell{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">{% endblock %}
+
+{% block content %}
+<section class="page">
+  <div class="shell">
+
+    <div class="page-head" data-reveal>
+      <h1>Your record</h1>
+      <p>Everything here is read from the runs stored against your account. Only you can see this page.</p>
+    </div>
+
+    {% if not has_data %}
+      <div class="empty" data-reveal>
+        <i class="bi bi-bar-chart-line"></i>
+        <h3>Your analytics appear after the first run</h3>
+        <p>Charts, weekday patterns and personal bests all need at least one completed test.</p>
+        <a class="btn btn-primary" href="{{ url_for('main.test') }}">Start your first test</a>
+      </div>
+    {% else %}
+
+      <div class="summary" data-reveal>
+        <div class="mark"><span>Fastest run</span><strong data-count="{{ stats.best_wpm }}">0</strong></div>
+        <div><span>Highest score</span><strong data-count="{{ stats.best_score }}">0</strong></div>
+        <div><span>Best accuracy</span><strong>{{ stats.best_accuracy }}%</strong></div>
+        <div><span>Longest streak</span><strong>{{ user.best_streak or 0 }}</strong></div>
+        <div><span>Total runs</span><strong data-count="{{ stats.tests }}">0</strong></div>
+        <div><span>Time at the keyboard</span><strong>{{ (stats.total_seconds / 60)|round(0)|int }}m</strong></div>
+      </div>
+
+      <div class="chart-loading" id="loadAll" style="position:static; padding:1rem 0;">Loading your performance…</div>
+
+      <div class="split">
+        <div class="card" data-reveal>
+          <h3>Speed over time</h3>
+          <p class="card-note">Words per minute across your last 30 runs.</p>
+          <div class="chart-box"><canvas id="wpmChart"></canvas></div>
+        </div>
+        <div class="card" data-reveal>
+          <h3>Accuracy over time</h3>
+          <p class="card-note">Same runs, percentage of keystrokes landed correctly.</p>
+          <div class="chart-box"><canvas id="accChart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="split">
+        <div class="card" data-reveal>
+          <h3>Which days you practise</h3>
+          <p class="card-note">Average speed and number of runs per weekday, last eight weeks.</p>
+          <div class="chart-box"><canvas id="weekdayChart"></canvas></div>
+        </div>
+        <div class="card" data-reveal>
+          <h3>Where your time goes</h3>
+          <p class="card-note">Minutes spent in each mode.</p>
+          <div class="chart-box"><canvas id="modeChart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="split">
+        <div class="card" data-reveal>
+          <h3>Speed by level</h3>
+          <p class="card-note">Average WPM in each level you've played. Expect this to slope down as the material hardens.</p>
+          <div class="chart-box"><canvas id="levelChart"></canvas></div>
+        </div>
+        <div class="card" data-reveal>
+          <h3>What the numbers say</h3>
+          <p class="card-note">Generated from the same rows that feed the charts.</p>
+          {% for i in insights %}
+          <div class="insight"><strong>{{ i.title }}</strong><p>{{ i.body }}</p></div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="card" data-reveal style="margin-top:1.4rem;">
+        <h3>Practice history</h3>
+        <p class="card-note">Twelve weeks of activity. Hover any square for that day's detail.</p>
+        <div class="activity">
+          {% for d in activity %}
+            <i data-level="{{ d.intensity }}"
+               data-tip="<strong>{{ d.label }}</strong><br>{{ d.tests }} run{{ '' if d.tests == 1 else 's' }}{% if d.tests %} · {{ d.wpm }} wpm · {{ d.accuracy }}% · {{ d.minutes }} min{% endif %}"></i>
+          {% endfor %}
+        </div>
+        <div class="activity-legend" style="margin-top:.6rem;">
+          <span>Quiet</span>
+          <i data-level="0"></i><i data-level="1"></i><i data-level="2"></i><i data-level="3"></i><i data-level="4"></i>
+          <span>Busy</span>
+        </div>
+      </div>
+
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+{% if has_data %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script>document.addEventListener('DOMContentLoaded', () => window.CWCharts.analytics());</script>
+{% endif %}
+{% endblock %}

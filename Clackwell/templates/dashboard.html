@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Clackwell{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">{% endblock %}
+
+{% block content %}
+<section class="page">
+  <div class="shell">
+
+    <div class="page-head row-between" data-reveal>
+      <div>
+        <h1>{{ 'Welcome to Clackwell, ' ~ user.name.split(' ')[0] if first_visit else 'Hello again, ' ~ user.name.split(' ')[0] }}</h1>
+        <p>
+          {% if stats.tests == 0 %}
+            Nothing recorded yet. The first run takes fifteen seconds.
+          {% elif user.streak > 1 %}
+            You're {{ user.streak }} days into a streak. One run keeps it alive.
+          {% else %}
+            Your best so far is {{ stats.best_wpm|round(0)|int }} wpm. Beat it today.
+          {% endif %}
+        </p>
+      </div>
+      <a class="btn btn-primary btn-lg" href="{{ url_for('main.test', level=user.current_level) }}">
+        <i class="bi bi-keyboard"></i> Start a run
+      </a>
+    </div>
+
+    <div class="summary" data-reveal>
+      <div class="mark"><span>Best speed</span><strong data-count="{{ stats.best_wpm }}">0</strong></div>
+      <div><span>Average speed</span><strong data-count="{{ stats.avg_wpm }}" data-decimals="1">0</strong></div>
+      <div><span>Average accuracy</span><strong>{{ stats.avg_accuracy }}%</strong></div>
+      <div><span>Runs completed</span><strong data-count="{{ stats.tests }}">0</strong></div>
+      <div><span>Current streak</span><strong>{{ user.streak or 0 }}</strong></div>
+      <div><span>Level reached</span><strong>{{ user.current_level }}</strong></div>
+    </div>
+
+    <div class="split">
+      <div class="stack">
+
+        <div class="card" data-reveal>
+          <div class="row-between">
+            <div>
+              <h3>Speed over your last runs</h3>
+              <p class="card-note">Words per minute and accuracy, oldest on the left.</p>
+            </div>
+            <a class="btn btn-sm btn-ghost" href="{{ url_for('main.analytics_page') }}">Full analytics</a>
+          </div>
+          {% if stats.tests == 0 %}
+            <div class="empty">
+              <i class="bi bi-graph-up"></i>
+              <h3>Your chart starts with your first run</h3>
+              <p>Complete one test and this fills in immediately.</p>
+              <a class="btn btn-primary" href="{{ url_for('main.test') }}">Start your first test</a>
+            </div>
+          {% else %}
+            <div class="chart-box">
+              <div class="chart-loading" id="loadProgress">Loading your record…</div>
+              <canvas id="progressChart"></canvas>
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="card" data-reveal>
+          <h3>Practice history</h3>
+          <p class="card-note">Twelve weeks. Darker squares are busier days — hover for the detail.</p>
+          <div class="activity">
+            {% for d in activity %}
+              <i data-level="{{ d.intensity }}"
+                 data-tip="<strong>{{ d.label }}</strong><br>{{ d.tests }} run{{ '' if d.tests == 1 else 's' }}{% if d.tests %} · {{ d.wpm }} wpm · {{ d.accuracy }}% · {{ d.minutes }} min{% endif %}"></i>
+            {% endfor %}
+          </div>
+          <div class="activity-legend" style="margin-top:.6rem;">
+            <span>Quiet</span>
+            <i data-level="0"></i><i data-level="1"></i><i data-level="2"></i><i data-level="3"></i><i data-level="4"></i>
+            <span>Busy</span>
+          </div>
+        </div>
+
+        <div class="card" data-reveal>
+          <h3>Recent runs</h3>
+          <p class="card-note">The last six, newest first.</p>
+          {% if recent %}
+          <table class="runs">
+            <thead>
+              <tr><th>When</th><th>Level</th><th>Mode</th><th>WPM</th><th>Accuracy</th><th>Score</th></tr>
+            </thead>
+            <tbody>
+              {% for r in recent %}
+              <tr>
+                <td>{{ r.created_at.strftime('%d %b, %H:%M') }}</td>
+                <td>L{{ r.level }}</td>
+                <td>{{ r.mode }}</td>
+                <td class="{{ 'pass' if r.passed }}">{{ r.wpm|round(0)|int }}</td>
+                <td>{{ r.accuracy|round(0)|int }}%</td>
+                <td>{{ '{:,}'.format(r.score) }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+            <div class="empty">
+              <i class="bi bi-keyboard"></i>
+              <h3>No runs recorded yet</h3>
+              <p>Your first score is waiting. Fifteen seconds is enough to start.</p>
+              <a class="btn btn-primary" href="{{ url_for('main.test') }}">Start your first test</a>
+            </div>
+          {% endif %}
+        </div>
+
+      </div>
+
+      <div class="stack">
+
+        <div class="card" data-reveal>
+          <p class="caption">Rank {{ user.rank }}</p>
+          <div class="rank-row">
+            <strong>Level {{ user.current_level }} · {{ level.title }}</strong>
+            <span>{{ xp_into }} / {{ xp_span }} XP</span>
+          </div>
+          <div class="xp-track"><div class="xp-fill" data-fill="{{ xp_percent }}"></div></div>
+          <p class="card-note" style="margin-top:.6rem;">
+            {% if xp_percent >= 100 %}
+              You've reached the top rank. XP keeps counting.
+            {% else %}
+              {{ xp_span - xp_into }} XP to the next rank.
+            {% endif %}
+          </p>
+          <a class="btn btn-sm" href="{{ url_for('main.levels') }}">See the ladder</a>
+        </div>
+
+        <div class="card" data-reveal>
+          <h3>What the numbers say</h3>
+          <p class="card-note">Written from your stored runs, refreshed on every visit.</p>
+          {% for i in insights %}
+          <div class="insight">
+            <strong>{{ i.title }}</strong>
+            <p>{{ i.body }}</p>
+          </div>
+          {% endfor %}
+        </div>
+
+        <div class="card" data-reveal>
+          <div class="row-between">
+            <h3>Badges</h3>
+            <span class="tiny muted">{{ badges|selectattr('earned')|list|length }} of {{ badges|length }}</span>
+          </div>
+          <p class="card-note">Hover a locked badge to see what opens it.</p>
+          <div class="badge-grid">
+            {% for b in badges %}
+            <div class="badge-tile {{ 'earned' if b.earned else 'locked' }}"
+                 data-tip="<strong>{{ b.badge.name }}</strong><br>{{ b.badge.requirement if not b.earned else b.badge.description }}">
+              <i class="bi bi-{{ b.badge.icon }}"></i>
+              <strong>{{ b.badge.name }}</strong>
+              <span>{{ b.earned_at.strftime('%d %b %Y') if b.earned else b.badge.requirement }}</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    {% if cleared_all %}
+    <div class="finale" data-reveal>
+      <p class="caption">Complete</p>
+      <h2>Every level cleared</h2>
+      <p class="lede" style="margin-inline:auto;">
+        Best {{ stats.best_wpm|round(0)|int }} wpm · {{ stats.avg_accuracy }}% average accuracy ·
+        {{ stats.tests }} runs · {{ (stats.total_seconds / 60)|round(0)|int }} minutes at the keyboard.
+      </p>
+      <div class="result-actions">
+        <a class="btn btn-primary" href="{{ url_for('main.analytics_page') }}">View my analytics</a>
+        <a class="btn" href="{{ url_for('main.test', level=7) }}">Play again</a>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+{% if stats.tests > 0 %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script>document.addEventListener('DOMContentLoaded', () => window.CWCharts.dashboard());</script>
+{% endif %}
+{% if first_visit %}
+<script>document.addEventListener('DOMContentLoaded', () => {
+  window.CWAnim.confetti(1800);
+  window.CWAnim.toast('Account created — your record starts now', 'mark', 2600);
+});</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}{{ code }} — Clackwell{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="shell" style="max-width:620px; text-align:center;">
+    <p class="caption mono" data-reveal>Error {{ code }}</p>
+    <h1 data-reveal>{{ headline }}</h1>
+    <p class="lede" data-reveal style="margin-inline:auto;">{{ detail }}</p>
+    <div class="hero-actions" data-reveal style="justify-content:center; display:flex; gap:.6rem; margin-top:1.4rem;">
+      <a class="btn btn-primary" href="{{ url_for('main.dashboard') if user else url_for('main.index') }}">
+        {{ 'Back to dashboard' if user else 'Back to home' }}
+      </a>
+      {% if user %}<a class="btn" href="{{ url_for('main.test') }}">Start a run</a>{% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}
