@@ -1,0 +1,8 @@
+.env
+.env.local
+.venv
+.venv_3.11
+__pycache__
+*.pyc
+database/*.db
+.git
